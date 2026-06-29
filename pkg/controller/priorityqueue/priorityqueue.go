@@ -397,7 +397,12 @@ func (w *priorityqueue[T]) handleReadyItems() {
 				w.waiters--
 				delete(w.items, item.Key)
 				toDelete = append(toDelete, item)
-				w.get <- *item
+
+				select {
+				case <-w.done:
+					return false
+				case w.get <- *item:
+				}
 
 				return w.waiters > 0
 			})
